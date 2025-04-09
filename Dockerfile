@@ -43,9 +43,6 @@ COPY --from=builder /app/.next/server ./.next/server
 COPY --from=builder /app/bin /app/bin
 RUN chmod +x /app/bin/*
 
-RUN mkdir -p /app/app/mcp && chmod 777 /app/app/mcp
-COPY --from=builder /app/app/mcp/mcp_config.default.json /app/app/mcp/mcp_config.json
-
 EXPOSE 3000
 
 CMD if [ -n "$PROXY_URL" ]; then \
