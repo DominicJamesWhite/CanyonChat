@@ -35,20 +35,49 @@ ENV OPENAI_API_KEY=""
 ENV GOOGLE_API_KEY=""
 ENV CODE=""
 ENV ENABLE_MCP=""
+ENV HUMANITEC_TOKEN=""
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/server ./.next/server
+COPY --from=builder /app/app/mcp ./app/mcp
 
 EXPOSE 3000
 
-CMD echo "Installing humctl..." && \
+CMD echo "Listing contents of /app/app/mcp before starting server:" && \
+    ls -la /app/app/mcp && \
+    echo "-----------------------------------------------------" && \
+    echo "Installing humctl..." && \
     HUMCTL_ARCH=$(uname -m) && \
-    if [ "$HUMCTL_ARCH" = "x86_64" ]; then HUMCTL_ARCH="amd64"; fi && \
-    curl -L "https://github.com/humanitec/cli/releases/latest/download/humctl_Linux_${HUMCTL_ARCH}.tar.gz" | tar xz -C /usr/local/bin && \
+    HUMCTL_VERSION="v0.39.2" && \
+    if [ "$HUMCTL_ARCH" = "x86_64" ]; then HUMCTL_ARCH="amd64"; \
+    elif [ "$HUMCTL_ARCH" = "aarch64" ]; then HUMCTL_ARCH="arm64"; fi && \
+    HUMCTL_FILENAME="cli_${HUMCTL_VERSION#v}_linux_${HUMCTL_ARCH}.tar.gz" && \
+    HUMCTL_URL="https://github.com/humanitec/cli/releases/download/${HUMCTL_VERSION}/${HUMCTL_FILENAME}" && \
+    echo "Downloading humctl version ${HUMCTL_VERSION} for architecture ${HUMCTL_ARCH} from ${HUMCTL_URL}" && \
+    curl -fSL "$HUMCTL_URL" -o /tmp/humctl.tar.gz && \
+    echo "Extracting humctl..." && \
+    tar xzf /tmp/humctl.tar.gz -C /usr/local/bin && \
+    rm /tmp/humctl.tar.gz && \
     chmod +x /usr/local/bin/humctl && \
     echo "humctl installed successfully." && \
+    \
+    echo "Installing canyon-cli..." && \
+    CANYON_ARCH=$(uname -m) && \
+    CANYON_VERSION="v0.0.7" && \
+    if [ "$CANYON_ARCH" = "x86_64" ]; then CANYON_ARCH="amd64"; \
+    elif [ "$CANYON_ARCH" = "aarch64" ]; then CANYON_ARCH="arm64"; fi && \
+    CANYON_FILENAME="canyon-cli_${CANYON_VERSION#v}_linux_${CANYON_ARCH}.tar.gz" && \
+    CANYON_URL="https://github.com/humanitec/canyon-cli/releases/download/${CANYON_VERSION}/${CANYON_FILENAME}" && \
+    echo "Downloading canyon-cli version ${CANYON_VERSION} for architecture ${CANYON_ARCH} from ${CANYON_URL}" && \
+    mkdir -p /app/bin && \
+    curl -fSL "$CANYON_URL" -o /tmp/canyon.tar.gz && \
+    echo "Extracting canyon-cli..." && \
+    tar xzf /tmp/canyon.tar.gz -C /app/bin canyon && \
+    rm /tmp/canyon.tar.gz && \
+    chmod +x /app/bin/canyon && \
+    echo "canyon-cli installed successfully to /app/bin/canyon." && \
     \
     if [ -n "$PROXY_URL" ]; then \
     export HOSTNAME="0.0.0.0"; \

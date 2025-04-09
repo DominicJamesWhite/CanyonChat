@@ -3,7 +3,7 @@
     "canyon": {
       "command": "/app/bin/canyon",
       "args": ["mcp"],
-      "env": {}
+      "env": { "HOME": "/root" }
     }
   }
 }
