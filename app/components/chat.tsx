@@ -25,6 +25,7 @@ import CancelIcon from "../icons/cancel.svg";
 import StopIcon from "../icons/pause.svg";
 import McpToolIcon from "../icons/tool.svg";
 import {
+  BOT_HELLO,
   ChatMessage,
   createMessage,
   DEFAULT_TOPIC,
@@ -1054,6 +1055,18 @@ function _Chat() {
   const context: RenderMessage[] = useMemo(() => {
     return session.mask.hideContext ? [] : session.mask.context.slice();
   }, [session.mask.context, session.mask.hideContext]);
+
+  if (
+    context.length === 0 &&
+    session.messages.at(0)?.content !== BOT_HELLO.content
+  ) {
+    // Intentionally prevent adding BOT_HELLO message
+    // const copiedHello = Object.assign({}, BOT_HELLO);
+    // if (!accessStore.isAuthorized()) {
+    //   copiedHello.content = Locale.Error.Unauthorized;
+    // }
+    // context.push(copiedHello);
+  }
 
   // preview messages
   const renderMessages = useMemo(() => {
