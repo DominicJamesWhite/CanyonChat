@@ -3,7 +3,7 @@ import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./home.module.scss";
 
 import { IconButton } from "./button";
-import ChatGptIcon from "../icons/chatgpt.svg";
+import CanyonIcon from "../icons/canyonSM.svg";
 import AddIcon from "../icons/add.svg";
 import DeleteIcon from "../icons/delete.svg";
 import DragIcon from "../icons/drag.svg";
@@ -246,7 +246,7 @@ export function SideBar(props: { className?: string }) {
       <SideBarHeader
         title="Canyon"
         subTitle="Alpha 0.7"
-        logo={<ChatGptIcon />}
+        logo={<CanyonIcon />}
         shouldNarrow={shouldNarrow}
       >
         <div className={styles["sidebar-header-bar"]}>
