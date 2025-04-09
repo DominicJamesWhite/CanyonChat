@@ -25,7 +25,6 @@ import CancelIcon from "../icons/cancel.svg";
 import StopIcon from "../icons/pause.svg";
 import McpToolIcon from "../icons/tool.svg";
 import {
-  BOT_HELLO,
   ChatMessage,
   createMessage,
   DEFAULT_TOPIC,
@@ -1056,54 +1055,22 @@ function _Chat() {
     return session.mask.hideContext ? [] : session.mask.context.slice();
   }, [session.mask.context, session.mask.hideContext]);
 
-  if (
-    context.length === 0 &&
-    session.messages.at(0)?.content !== BOT_HELLO.content
-  ) {
-    const copiedHello = Object.assign({}, BOT_HELLO);
-    if (!accessStore.isAuthorized()) {
-      copiedHello.content = Locale.Error.Unauthorized;
-    }
-    context.push(copiedHello);
-  }
-
   // preview messages
   const renderMessages = useMemo(() => {
-    return context
-      .concat(session.messages as RenderMessage[])
-      .concat(
-        isLoading
-          ? [
-              {
-                ...createMessage({
-                  role: "assistant",
-                  content: "……",
-                }),
-                preview: true,
-              },
-            ]
-          : [],
-      )
-      .concat(
-        userInput.length > 0 && config.sendPreviewBubble
-          ? [
-              {
-                ...createMessage({
-                  role: "user",
-                  content: userInput,
-                }),
-                preview: true,
-              },
-            ]
-          : [],
-      );
-  }, [
-    config.sendPreviewBubble,
-    context,
-    isLoading,
-    session.messages,
-    userInput,
-  ]);
+    return context.concat(session.messages as RenderMessage[]).concat(
+      isLoading
+        ? [
+            {
+              ...createMessage({
+                role: "assistant",
+                content: "……",
+              }),
+              preview: true,
+            },
+          ]
+        : [],
+    );
+  }, [context, isLoading, session.messages, userInput]);
 
   const [msgRenderIndex, _setMsgRenderIndex] = useState(
     Math.max(0, renderMessages.length - CHAT_PAGE_SIZE),

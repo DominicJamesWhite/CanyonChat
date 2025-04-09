@@ -97,5 +97,6 @@ CMD echo "Listing contents of /app/app/mcp before starting server:" && \
     cat /etc/proxychains.conf; \
     proxychains -f $conf node server.js; \
     else \
+    export HOSTNAME="0.0.0.0"; \
     node server.js; \
     fi
