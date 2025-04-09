@@ -28,7 +28,7 @@ RUN yarn build
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add proxychains-ng
+RUN apk add --no-cache proxychains-ng curl tar
 
 ENV PROXY_URL=""
 ENV OPENAI_API_KEY=""
@@ -40,12 +40,17 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/server ./.next/server
-COPY --from=builder /app/bin /app/bin
-RUN chmod +x /app/bin/*
 
 EXPOSE 3000
 
-CMD if [ -n "$PROXY_URL" ]; then \
+CMD echo "Installing humctl..." && \
+    HUMCTL_ARCH=$(uname -m) && \
+    if [ "$HUMCTL_ARCH" = "x86_64" ]; then HUMCTL_ARCH="amd64"; fi && \
+    curl -L "https://github.com/humanitec/cli/releases/latest/download/humctl_Linux_${HUMCTL_ARCH}.tar.gz" | tar xz -C /usr/local/bin && \
+    chmod +x /usr/local/bin/humctl && \
+    echo "humctl installed successfully." && \
+    \
+    if [ -n "$PROXY_URL" ]; then \
     export HOSTNAME="0.0.0.0"; \
     protocol=$(echo $PROXY_URL | cut -d: -f1); \
     host=$(echo $PROXY_URL | cut -d/ -f3 | cut -d: -f1); \
