@@ -61,14 +61,14 @@ jobs:
 
           echo "Found $service_count services to process."
 
-          # Loop through services defined in SERVICE_CONFIG variable, outputting each as compact JSON
-          echo "${{ env.SERVICE_CONFIG }}" | yq -o=json --compact-output '.services[]' | while IFS= read -r service_json; do
-            # Parse the JSON object for this service
-            service_name=$(echo "$service_json" | yq -r '.name')
-            secret_env_var_name=$(echo "$service_json" | yq -r '.secret_name')
+          # Loop through services using index
+          for i in $(seq 0 $(($service_count - 1))); do
+            echo "Processing service index $i..."
+            service_name=$(echo "${{ env.SERVICE_CONFIG }}" | yq -r ".services[$i].name")
+            secret_env_var_name=$(echo "${{ env.SERVICE_CONFIG }}" | yq -r ".services[$i].secret_name")
 
             echo "" # Newline for readability
-            echo "--- Processing service: $service_name ---"
+            echo "--- Processing service: $service_name (Index: $i) ---"
 
             if [ -z "$service_name" ] || [ "$service_name" == "null" ]; then
                 echo "::warning::Skipping service with missing or null name in SERVICE_CONFIG."
