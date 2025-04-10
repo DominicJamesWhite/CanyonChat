@@ -41,7 +41,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/server ./.next/server
-COPY --from=builder /app/app/mcp ./app/mcp
+COPY --from=builder /app/mcp ./app/mcp
 
 EXPOSE 3000
 
