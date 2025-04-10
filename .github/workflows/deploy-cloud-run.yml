@@ -1,0 +1,137 @@
+name: Deploy Cloud Run Services
+
+# Trigger manually from the Actions tab
+on:
+  workflow_dispatch:
+
+env:
+  GCP_PROJECT_ID: funny-new-goose
+  GCP_REGION: us-central1 # Or choose another region if needed
+  IMAGE_URI: us-central1-docker.pkg.dev/funny-new-goose/cloud-run-source-deploy/canyonchat/canyonchat@sha256:103623b4ec62e1eae0696362f54e4bd1e82714260326435f35d3bdbff0993720
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # IMPORTANT: Add all potential *_ENV secret names referenced in the SERVICE_CONFIG variable here!
+    # The script below uses SERVICE_CONFIG to pick the correct one for each service.
+    env:
+      SERVICE_CONFIG: ${{ vars.SERVICE_CONFIG }} # Read from GitHub Actions Variable
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }} # Read from GitHub Actions Secret
+      # Add secrets referenced in SERVICE_CONFIG here (e.g., DOMINICWHITE01_ENV):
+      DOMINICWHITE01_ENV: ${{ secrets.DOMINICWHITE01_ENV }}
+      # EXAMPLE_SERVICE_ENV: ${{ secrets.EXAMPLE_SERVICE_ENV }} # Add more as needed
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install yq (YAML Processor)
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+        shell: bash
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy Services Script
+        id: deploy
+        run: |
+          echo "Parsing SERVICE_CONFIG variable:"
+          echo "${{ env.SERVICE_CONFIG }}"
+
+          # Validate SERVICE_CONFIG YAML structure
+          if ! echo "${{ env.SERVICE_CONFIG }}" | yq '.services | length >= 0' > /dev/null 2>&1; then
+            echo "::error::SERVICE_CONFIG variable is empty or not valid YAML containing a '.services' array."
+            exit 1
+          fi
+
+          service_count=$(echo "${{ env.SERVICE_CONFIG }}" | yq '.services | length')
+          if [ "$service_count" -eq 0 ]; then
+             echo "No services found in SERVICE_CONFIG. Exiting."
+             exit 0
+          fi
+
+          echo "Found $service_count services to process."
+
+          # Loop through services defined in SERVICE_CONFIG variable
+          echo "${{ env.SERVICE_CONFIG }}" | yq -c '.services[]' | while IFS= read -r service_json; do
+            service_name=$(echo "$service_json" | yq -r '.name')
+            secret_env_var_name=$(echo "$service_json" | yq -r '.secret_name')
+
+            echo "" # Newline for readability
+            echo "--- Processing service: $service_name ---"
+
+            if [ -z "$service_name" ] || [ "$service_name" == "null" ]; then
+                echo "::warning::Skipping service with missing or null name in SERVICE_CONFIG."
+                continue
+            fi
+            if [ -z "$secret_env_var_name" ] || [ "$secret_env_var_name" == "null" ]; then
+                echo "::warning::Skipping service '$service_name' due to missing or null secret_name in SERVICE_CONFIG."
+                continue
+            fi
+
+            echo "Using environment secret variable name: $secret_env_var_name"
+
+            # --- Get the environment variable string ---
+            # Use indirect parameter expansion to get the value of the env var whose name is stored in secret_env_var_name
+            raw_env_vars="${!secret_env_var_name}"
+
+            if [ -z "$raw_env_vars" ]; then
+              echo "::warning::Environment variable string for secret '$secret_env_var_name' (service '$service_name') is empty or the secret is not defined in the workflow's 'env' block."
+              formatted_env_vars="" # Deploy with no env vars if secret is empty/missing
+            else
+              # --- Format environment variables for gcloud ---
+              # Convert space-separated KEY=VALUE pairs to comma-separated KEY=VALUE
+              # Handles potential extra whitespace between pairs
+              formatted_env_vars=$(echo "$raw_env_vars" | tr ' ' '\n' | grep '=' | paste -sd,)
+              echo "Formatted env vars for gcloud: $formatted_env_vars"
+              # Mask sensitive values in log output (simple masking, might not catch all formats)
+              masked_vars=$(echo "$formatted_env_vars" | sed -E 's/(=[^,]+)/=***/g')
+              echo "Formatted env vars (masked): $masked_vars"
+            fi
+
+            # --- Normalize service name for Cloud Run ---
+            # Lowercase, replace underscores/spaces with hyphens, remove invalid chars, limit length
+            normalized_service_name=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | sed -e 's/[_ ]/-/g' -e 's/[^a-z0-9-]//g')
+            # Remove leading/trailing hyphens
+            normalized_service_name=$(echo "$normalized_service_name" | sed -e 's/^-*//' -e 's/-*$//')
+            # Ensure it's not empty after normalization
+            if [ -z "$normalized_service_name" ]; then
+                echo "::error::Service name '$service_name' resulted in an empty string after normalization. Skipping."
+                continue
+            fi
+            # Truncate to 63 characters (Cloud Run limit)
+            normalized_service_name=${normalized_service_name:0:63}
+
+            echo "Normalized service name for Cloud Run: $normalized_service_name"
+
+            # --- Deploy using gcloud ---
+            echo "Deploying $normalized_service_name to $GCP_REGION..."
+            gcloud run deploy "$normalized_service_name" \
+              --image="$IMAGE_URI" \
+              --project="$GCP_PROJECT_ID" \
+              --region="$GCP_REGION" \
+              --set-env-vars="$formatted_env_vars" \
+              --allow-unauthenticated \
+              --platform=managed \
+              --quiet # Avoid interactive prompts
+
+            if [ $? -ne 0 ]; then
+              echo "::error::Failed to deploy service $normalized_service_name."
+              # Optionally exit the loop/workflow on failure:
+              # exit 1
+            else
+              echo "Successfully deployed/updated service $normalized_service_name."
+            fi
+            echo "-------------------------------------"
+
+          done
+        shell: bash
