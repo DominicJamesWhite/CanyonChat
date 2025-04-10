@@ -1,5 +1,18 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import styles from "./voice-print.module.scss";
+import { useAppConfig } from "@/app/store"; // Import config store
+
+// Helper function to convert hex color to RGB object
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
+}
 
 interface VoicePrintProps {
   frequencies?: Uint8Array;
@@ -15,6 +28,12 @@ export function VoicePrint({ frequencies, isActive }: VoicePrintProps) {
   const historyLengthRef = useRef(10);
   // 存储动画帧ID，用于清理
   const animationFrameRef = useRef<number>();
+  const config = useAppConfig(); // Get theme config
+  const [primaryColorRgb, setPrimaryColorRgb] = useState<{
+    r: number;
+    g: number;
+    b: number;
+  } | null>(null);
 
   /**
    * 更新频率历史数据
@@ -33,6 +52,12 @@ export function VoicePrint({ frequencies, isActive }: VoicePrintProps) {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // Get primary color from CSS variable
+    const computedStyle = getComputedStyle(canvas);
+    const primaryColorHex = computedStyle.getPropertyValue("--primary").trim();
+    const rgb = hexToRgb(primaryColorHex);
+    setPrimaryColorRgb(rgb); // Store RGB for drawing
 
     /**
      * 处理高DPI屏幕显示
@@ -147,13 +172,29 @@ export function VoicePrint({ frequencies, isActive }: VoicePrintProps) {
 
       /**
        * 渐变效果：
-       * 从左到右应用三色渐变，带透明度
-       * 使用蓝色系配色提升视觉效果
+       * Use primary theme color for gradient
        */
       const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-      gradient.addColorStop(0, "rgba(100, 180, 255, 0.95)");
-      gradient.addColorStop(0.5, "rgba(140, 200, 255, 0.9)");
-      gradient.addColorStop(1, "rgba(180, 220, 255, 0.95)");
+      if (primaryColorRgb) {
+        // Use variations of the primary color for the gradient
+        const { r, g, b } = primaryColorRgb;
+        // Adjust brightness slightly for stops (example: make middle stop slightly lighter)
+        const rMid = Math.min(255, r + 20);
+        const gMid = Math.min(255, g + 20);
+        const bMid = Math.min(255, b + 20);
+        const rEnd = Math.min(255, r + 40);
+        const gEnd = Math.min(255, g + 40);
+        const bEnd = Math.min(255, b + 40);
+
+        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.95)`);
+        gradient.addColorStop(0.5, `rgba(${rMid}, ${gMid}, ${bMid}, 0.9)`);
+        gradient.addColorStop(1, `rgba(${rEnd}, ${gEnd}, ${bEnd}, 0.95)`);
+      } else {
+        // Fallback to original blue if color parsing fails
+        gradient.addColorStop(0, "rgba(100, 180, 255, 0.95)");
+        gradient.addColorStop(0.5, "rgba(140, 200, 255, 0.9)");
+        gradient.addColorStop(1, "rgba(180, 220, 255, 0.95)");
+      }
 
       ctx.fillStyle = gradient;
       ctx.fill();
@@ -170,7 +211,8 @@ export function VoicePrint({ frequencies, isActive }: VoicePrintProps) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [frequencies, isActive, updateHistory]);
+    // Add config.theme to dependencies to re-run effect on theme change
+  }, [frequencies, isActive, updateHistory, config.theme, primaryColorRgb]);
 
   return (
     <div className={styles["voice-print"]}>
