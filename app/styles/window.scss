@@ -1,5 +1,5 @@
 .window-header {
-  padding: 14px 20px;
+  padding: 20px 20px;
   border-bottom: rgba(0, 0, 0, 0.1) 1px solid;
   position: relative;
 
@@ -13,8 +13,7 @@
   overflow: hidden;
 
   .window-header-main-title {
-    font-size: 20px;
-    font-weight: bolder;
+    font-size: 16px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -24,6 +23,8 @@
 
   .window-header-sub-title {
     font-size: 14px;
+    margin-top: 8px;
+    opacity: 0.7;
   }
 }
 

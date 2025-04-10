@@ -1476,7 +1476,9 @@ function _Chat() {
                             <div className={styles["chat-message-avatar"]}>
                               {/* Edit button removed for simplicity */}
                               {isUser ? (
-                                <Avatar avatar={config.avatar} />
+                                <span className={styles["user-avatar-text"]}>
+                                  You
+                                </span>
                               ) : (
                                 <>
                                   {["system"].includes(message.role) ? (
