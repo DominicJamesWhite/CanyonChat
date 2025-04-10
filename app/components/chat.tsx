@@ -11,7 +11,6 @@ import React, {
 
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
-import RenameIcon from "../icons/rename.svg";
 import ReturnIcon from "../icons/return.svg";
 import CopyIcon from "../icons/copy.svg";
 import LoadingIcon from "../icons/three-dots.svg";
@@ -1416,7 +1415,7 @@ function _Chat() {
           </div>
           <div className="window-actions">
             {/* Refresh, Export, Fullscreen buttons removed for simplicity */}
-            {!isMobileScreen && (
+            {/* {!isMobileScreen && (
               <div className="window-action-button">
                 <IconButton
                   icon={<RenameIcon />}
@@ -1426,7 +1425,7 @@ function _Chat() {
                   onClick={() => setIsEditingMessage(true)}
                 />
               </div>
-            )}
+            )} */}
           </div>
 
           <PromptToast
