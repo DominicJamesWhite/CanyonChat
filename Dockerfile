@@ -65,10 +65,9 @@ COPY --from=builder /app/app/mcp/mcp_config.default.json /app/app/mcp/mcp_config
 
 EXPOSE 3000
 
-# Define the path for the dynamic credentials file
-GCP_KEY_PATH="/app/gcp-key.json"
-
-CMD # Setup GCP credentials dynamically if provided
+CMD # Define the path for the dynamic credentials file within the script
+    GCP_KEY_PATH="/app/gcp-key.json" && \
+    # Setup GCP credentials dynamically if provided
     if [ -n "$GCP_SERVICE_ACCOUNT_KEY_JSON" ]; then \
       echo "Creating GCP key file from environment variable..." && \
       echo "$GCP_SERVICE_ACCOUNT_KEY_JSON" > "$GCP_KEY_PATH" && \
