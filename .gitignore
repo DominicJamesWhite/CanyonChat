@@ -44,6 +44,7 @@ dev
 
 *.key
 *.key.pub
+gcp-key.json
 
 masks.json
 

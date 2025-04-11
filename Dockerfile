@@ -28,7 +28,22 @@ RUN yarn build
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add --no-cache proxychains-ng curl tar
+# Install necessary packages including Python3 and bash for gcloud
+RUN apk add --no-cache proxychains-ng curl tar python3 py3-crcmod bash
+
+# Install Google Cloud SDK
+ENV CLOUD_SDK_VERSION=460.0.0
+RUN curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-${CLOUD_SDK_VERSION}-linux-$(uname -m).tar.gz && \
+    tar xzf google-cloud-cli-${CLOUD_SDK_VERSION}-linux-$(uname -m).tar.gz && \
+    rm google-cloud-cli-${CLOUD_SDK_VERSION}-linux-$(uname -m).tar.gz && \
+    ./google-cloud-sdk/install.sh --quiet --usage-reporting false --path-update true && \
+    # Add gcloud to PATH for subsequent RUN/CMD instructions
+    export PATH="/google-cloud-sdk/bin:$PATH" && \
+    # Clean up installation directory to reduce image size (optional)
+    rm -rf /google-cloud-sdk/.install
+
+# Set PATH for future commands in the container
+ENV PATH /google-cloud-sdk/bin:$PATH
 
 ENV PROXY_URL=""
 ENV OPENAI_API_KEY=""
@@ -36,6 +51,8 @@ ENV GOOGLE_API_KEY=""
 ENV CODE=""
 ENV ENABLE_MCP=""
 ENV HUMANITEC_TOKEN=""
+# GCP_SERVICE_ACCOUNT_KEY_JSON will hold the key content if provided
+ENV GCP_SERVICE_ACCOUNT_KEY_JSON=""
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
@@ -48,7 +65,21 @@ COPY --from=builder /app/app/mcp/mcp_config.default.json /app/app/mcp/mcp_config
 
 EXPOSE 3000
 
-CMD echo "Listing contents of /app/app/mcp before starting server:" && \
+# Define the path for the dynamic credentials file
+GCP_KEY_PATH="/app/gcp-key.json"
+
+CMD # Setup GCP credentials dynamically if provided
+    if [ -n "$GCP_SERVICE_ACCOUNT_KEY_JSON" ]; then \
+      echo "Creating GCP key file from environment variable..." && \
+      echo "$GCP_SERVICE_ACCOUNT_KEY_JSON" > "$GCP_KEY_PATH" && \
+      export GOOGLE_APPLICATION_CREDENTIALS="$GCP_KEY_PATH" && \
+      echo "GOOGLE_APPLICATION_CREDENTIALS set to $GCP_KEY_PATH" ; \
+    else \
+      echo "GCP_SERVICE_ACCOUNT_KEY_JSON not set. Unsetting GOOGLE_APPLICATION_CREDENTIALS." ; \
+      unset GOOGLE_APPLICATION_CREDENTIALS ; \
+    fi && \
+    # Original CMD starts here
+    echo "Listing contents of /app/app/mcp before starting server:" && \
     ls -la /app/app/mcp && \
     echo "-----------------------------------------------------" && \
     echo "Installing humctl..." && \

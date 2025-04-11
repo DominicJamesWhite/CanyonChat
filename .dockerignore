@@ -95,3 +95,4 @@ Thumbs.db
 # secret key
 *.key
 *.key.pub
+gcp-key.json
