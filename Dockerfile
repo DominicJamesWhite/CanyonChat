@@ -72,7 +72,7 @@ CMD echo "Listing contents of /app/app/mcp before starting server:" && \
     if [ "$CANYON_ARCH" = "x86_64" ]; then CANYON_ARCH="amd64"; \
     elif [ "$CANYON_ARCH" = "aarch64" ]; then CANYON_ARCH="arm64"; fi && \
     CANYON_FILENAME="canyon-cli_${CANYON_VERSION#v}_linux_${CANYON_ARCH}.tar.gz" && \
-    CANYON_URL="https://github.com/humanitec/canyon-cli/releases/download/${CANYON_VERSION}/${CANYON_FILENAME}" && \
+    CANYON_URL="https://github.com/DominicJamesWhite/canyon-cli-cloud/releases/download/${CANYON_VERSION}/${CANYON_FILENAME}" && \
     echo "Downloading canyon-cli version ${CANYON_VERSION} for architecture ${CANYON_ARCH} from ${CANYON_URL}" && \
     mkdir -p /app/bin && \
     curl -fSL "$CANYON_URL" -o /tmp/canyon.tar.gz && \
