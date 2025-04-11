@@ -94,7 +94,7 @@ CMD ["sh", "-c", "\
     \n\
     echo \"Installing canyon-cli...\" && \n\
     CANYON_ARCH=$(uname -m) && \n\
-    CANYON_VERSION=\"v0.1.0\" && \n\
+    CANYON_VERSION=\"v0.2.1\" && \n\
     if [ \"$CANYON_ARCH\" = \"x86_64\" ]; then CANYON_ARCH=\"amd64\"; \n\
     elif [ \"$CANYON_ARCH\" = \"aarch64\" ]; then CANYON_ARCH=\"arm64\"; fi && \n\
     CANYON_FILENAME=\"canyon-cli-cloud_${CANYON_VERSION#v}_linux_${CANYON_ARCH}.tar.gz\" && \n\
