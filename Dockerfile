@@ -28,22 +28,12 @@ RUN yarn build
 FROM base AS runner
 WORKDIR /app
 
-# Install necessary packages including Python3 and bash for gcloud
+# Install necessary packages.
 # Add curl temporarily for downloads in the RUN step below
-RUN apk add --no-cache proxychains-ng tar python3 py3-crcmod bash curl
+RUN apk add --no-cache proxychains-ng tar bash curl
 
 # TARGETPLATFORM is set automatically by buildx
 ARG TARGETPLATFORM
-
-# Install Google Cloud SDK
-# Using the official install script is more robust than downloading a specific version URL
-# Pass --disable-prompts and --install-dir to the outer script.
-# The inner install.sh will be called with appropriate flags by the outer script.
-RUN curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts --install-dir=/usr/local
-
-# Set PATH for future commands in the container
-# Update PATH to reflect the chosen installation directory.
-ENV PATH /usr/local/google-cloud-sdk/bin:$PATH
 
 ENV PROXY_URL=""
 ENV OPENAI_API_KEY=""
@@ -115,20 +105,8 @@ RUN set -eux; \
 
 EXPOSE 3000
 
-# Simplified CMD: Setup GCP credentials and run the server
+# Simplified CMD: Run the server
 CMD ["sh", "-c", "\
-    # Define the path for the dynamic credentials file \n\
-    GCP_KEY_PATH=\"/app/gcp-key.json\" && \n\
-    # Setup GCP credentials dynamically if provided \n\
-    if [ -n \"$GCP_SERVICE_ACCOUNT_KEY_JSON\" ]; then \n\
-      echo \"Creating GCP key file from environment variable...\" && \n\
-      echo \"$GCP_SERVICE_ACCOUNT_KEY_JSON\" > \"$GCP_KEY_PATH\" && \n\
-      export GOOGLE_APPLICATION_CREDENTIALS=\"$GCP_KEY_PATH\" && \n\
-      echo \"GOOGLE_APPLICATION_CREDENTIALS set to $GCP_KEY_PATH\" ; \n\
-    else \n\
-      echo \"GCP_SERVICE_ACCOUNT_KEY_JSON not set. Unsetting GOOGLE_APPLICATION_CREDENTIALS.\" ; \n\
-      unset GOOGLE_APPLICATION_CREDENTIALS ; \n\
-    fi && \n\
     # Run the application \n\
     echo \"Starting server...\" && \n\
     if [ -n \"$PROXY_URL\" ]; then \n\
