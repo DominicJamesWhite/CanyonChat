@@ -91,7 +91,7 @@ RUN set -eux; \
       linux/arm64) CANYON_ARCH="arm64"; ;; \
       *) echo "Unsupported architecture for canyon-cli: ${TARGETPLATFORM}"; exit 1; ;; \
     esac; \
-    CANYON_VERSION="v0.2.2"; \
+    CANYON_VERSION="v0.2.4"; \
     CANYON_FILENAME="canyon-cli-cloud_${CANYON_VERSION#v}_linux_${CANYON_ARCH}.tar.gz"; \
     CANYON_URL="https://github.com/DominicJamesWhite/canyon-cli-cloud/releases/download/${CANYON_VERSION}/${CANYON_FILENAME}"; \
     echo "Downloading canyon-cli-cloud version ${CANYON_VERSION} for architecture ${CANYON_ARCH} from ${CANYON_URL}"; \
