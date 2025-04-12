@@ -51,7 +51,13 @@ ENV GOOGLE_API_KEY=""
 ENV CODE=""
 ENV ENABLE_MCP=""
 ENV HUMANITEC_TOKEN=""
-ENV GCP_SERVICE_ACCOUNT_KEY_JSON=""
+ENV MINIO_ENDPOINT=""
+ENV MINIO_ACCESS_KEY_ID=""
+ENV MINIO_SECRET_ACCESS_KEY=""
+ENV MINIO_BUCKET=""
+ENV MINIO_USE_SSL=""
+
+
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
@@ -91,7 +97,7 @@ RUN set -eux; \
       linux/arm64) CANYON_ARCH="arm64"; ;; \
       *) echo "Unsupported architecture for canyon-cli: ${TARGETPLATFORM}"; exit 1; ;; \
     esac; \
-    CANYON_VERSION="v0.2.5"; \
+    CANYON_VERSION="v0.3.0"; \
     CANYON_FILENAME="canyon-cli-cloud_${CANYON_VERSION#v}_linux_${CANYON_ARCH}.tar.gz"; \
     CANYON_URL="https://github.com/DominicJamesWhite/canyon-cli-cloud/releases/download/${CANYON_VERSION}/${CANYON_FILENAME}"; \
     echo "Downloading canyon-cli-cloud version ${CANYON_VERSION} for architecture ${CANYON_ARCH} from ${CANYON_URL}"; \
