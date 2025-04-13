@@ -110,7 +110,7 @@ CMD ["sh", "-c", "\
     # Run the application \n\
     echo \"Starting server...\" && \n\
     if [ -n \"$PROXY_URL\" ]; then \n\
-      export HOSTNAME=\"0.0.0.0\"; \n\
+      export HOSTNAME=\"::\"; \n\
       protocol=$(echo $PROXY_URL | cut -d: -f1); \n\
       host=$(echo $PROXY_URL | cut -d/ -f3 | cut -d: -f1); \n\
       port=$(echo $PROXY_URL | cut -d: -f3); \n\
@@ -127,7 +127,7 @@ CMD ["sh", "-c", "\
       echo \"Using proxychains with config:\" && cat /etc/proxychains.conf; \n\
       proxychains -f $conf node server.js; \n\
     else \n\
-      export HOSTNAME=\"0.0.0.0\"; \n\
+      export HOSTNAME=\"::\"; \n\
       node server.js; \n\
     fi \
 "]
