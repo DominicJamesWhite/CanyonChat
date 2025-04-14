@@ -383,6 +383,7 @@ export function getClientApi(provider: ServiceProvider): ClientApi {
     case ServiceProvider.SiliconFlow:
       return new ClientApi(ModelProvider.SiliconFlow);
     default:
-      return new ClientApi(ModelProvider.GPT);
+      // Default to GeminiPro if provider is unknown or not specified
+      return new ClientApi(ModelProvider.GeminiPro);
   }
 }
