@@ -135,7 +135,8 @@ interface ChatProvider {
 export class ClientApi {
   public llm: LLMApi;
 
-  constructor(provider: ModelProvider = ModelProvider.GPT) {
+  constructor(provider: ModelProvider = ModelProvider.GeminiPro) {
+    // Default constructor argument to GeminiPro
     switch (provider) {
       case ModelProvider.GeminiPro:
         this.llm = new GeminiProApi();
