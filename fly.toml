@@ -1,12 +1,13 @@
-# fly.toml app configuration file generated for canyon-humctl-interface-aged-water-4445 on 2025-04-09T18:42:54+02:00
+# fly.toml app configuration file for canyonchat-canyon-beta
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'canyon-humctl-interface-aged-water-4445'
+app = 'canyonchat-canyon-beta'
 primary_region = 'ams'
 
 [build]
+  dockerfile = "Dockerfile"
 
 [http_service]
   internal_port = 3000
